@@ -17635,6 +17635,10 @@ in
 
   clamsmtp = callPackage ../servers/mail/clamsmtp { };
 
+  chirpstack = {
+    network-server = callPackage ../servers/chirpstack/network-server {};
+  };
+
   clickhouse = callPackage ../servers/clickhouse {
     # upstream requires llvm10 as of v20.11.4.13
     inherit (llvmPackages_10) clang-unwrapped lld lldClang llvm;
