@@ -1,19 +1,21 @@
-{ lib, rustPlatform, fetchFromGitHub, perl }:
+{ lib, stdenv, rustPlatform, fetchFromGitHub, perl, Security }:
 
 rustPlatform.buildRustPackage rec {
   pname = "tickrs";
-  version = "0.9.0";
+  version = "0.14.4";
 
   src = fetchFromGitHub {
     owner = "tarkah";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-FCELPt7aBKD+mf5w9HuJqKPw64qBLgdbLIfGZEB19OI=";
+    sha256 = "sha256-OOsBo+NCfn++2XyfQVoeEPcbSv645Ng7g9s4W7X2xg4=";
   };
 
-  cargoSha256 = "sha256-GsK0T9BfIqr0N4wxIhvvTmNEC6I2j3XPeAJMJjRiZKU=";
+  cargoSha256 = "sha256-PW8f4PZGctHd8YBBRvmueR8UgtyDQZpqf2lTU1t68iM=";
 
   nativeBuildInputs = [ perl ];
+
+  buildInputs = lib.optionals stdenv.isDarwin [ Security ];
 
   meta = with lib; {
     description = "Realtime ticker data in your terminal";

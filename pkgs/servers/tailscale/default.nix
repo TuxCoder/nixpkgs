@@ -1,22 +1,21 @@
-{ lib, buildGoModule, fetchFromGitHub, makeWrapper, iptables, iproute }:
+{ lib, buildGoModule, fetchFromGitHub, makeWrapper, iptables, iproute2 }:
 
 buildGoModule rec {
   pname = "tailscale";
-  version = "1.4.2";
-  tagHash = "f40ccb086c4c3f09b3cc67b7c559bd2c5d3cf953"; # from `git rev-parse v1.4.2`
+  version = "1.8.3";
 
   src = fetchFromGitHub {
     owner = "tailscale";
     repo = "tailscale";
     rev = "v${version}";
-    sha256 = "0jc7z6ml59a1xs3c3mskj9s34gw7hmixn8dbz3bi81qv0yi9pvnx";
+    sha256 = "0q0nk0ychb00xhycq3kda57dzrswl8yhci7fzv8yiqzrv3ygpvyd";
   };
 
   nativeBuildInputs = [ makeWrapper ];
 
   CGO_ENABLED = 0;
 
-  vendorSha256 = "16aa7jc2h59hnnh0mfmnd0k198dijm9j4c44j80wpzlhf4x27yjs";
+  vendorSha256 = "0cppblz1mnyb3c8xcry5mnf566s6l9409vf9572n1rs1bg91dvgn";
 
   doCheck = false;
 
@@ -25,13 +24,13 @@ buildGoModule rec {
   preBuild = ''
     export buildFlagsArray=(
       -tags="xversion"
-      -ldflags="-X tailscale.com/version.Long=${version} -X tailscale.com/version.Short=${version} -X tailscale.com/version.GitCommit=${tagHash}"
+      -ldflags="-X tailscale.com/version.Long=${version} -X tailscale.com/version.Short=${version}"
     )
   '';
 
   postInstall = ''
     wrapProgram $out/bin/tailscaled --prefix PATH : ${
-      lib.makeBinPath [ iproute iptables ]
+      lib.makeBinPath [ iproute2 iptables ]
     }
     sed -i -e "s#/usr/sbin#$out/bin#" -e "/^EnvironmentFile/d" ./cmd/tailscaled/tailscaled.service
     install -D -m0444 -t $out/lib/systemd/system ./cmd/tailscaled/tailscaled.service

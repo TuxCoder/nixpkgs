@@ -26,6 +26,14 @@ stdenv.mkDerivation rec {
     "USE_SYSTEM_XXHASH=1"
   ];
 
+  preFixup = ''
+    for f in $out/share/hashcat/OpenCL/*.cl; do
+      # Rewrite files to be included for compilation at runtime for opencl offload
+      sed "s|#include \"\(.*\)\"|#include \"$out/share/hashcat/OpenCL/\1\"|g" -i "$f"
+      sed "s|#define COMPARE_\([SM]\) \"\(.*\.cl\)\"|#define COMPARE_\1 \"$out/share/hashcat/OpenCL/\2\"|g" -i "$f"
+    done
+  '';
+
   postFixup = ''
     wrapProgram $out/bin/hashcat --prefix LD_LIBRARY_PATH : ${ocl-icd}/lib
   '';

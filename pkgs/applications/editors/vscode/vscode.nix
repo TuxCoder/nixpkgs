@@ -13,10 +13,10 @@ let
   archive_fmt = if system == "x86_64-darwin" then "zip" else "tar.gz";
 
   sha256 = {
-    x86_64-linux = "07wbh4sfvnmvif1a03z8bbqrjmcwmb4q5nn3l2r738i9wrxdxjja";
-    x86_64-darwin = "0djcx4n17giynckhsqqx8q7j25cxd3xqgjz3jhh8xh54h4fbvmbz";
-    aarch64-linux = "172x6c2pl994ps4xbrgrkzdb02gmpqag61sbxc7796cx0xk8bjpi";
-    armv7l-linux = "008bf7iwfizbn67wl1cxahl6h7pg04ms4q2nmr0dndcpxgc1q5gd";
+    x86_64-linux = "08qrag9nzmngzzvs2cgbmc4zzxlb9kwn183v8caj6dvcrjvfqgbv";
+    x86_64-darwin = "0rlyr08lla3xadlh373xqcks8a9akk3x2cmakgn17q2b16988fmq";
+    aarch64-linux = "1m277940xsasqac4i88s05xrqsab99jhl3ka0zzfbixrgr2dj8q1";
+    armv7l-linux = "1qm4cggjj50vdnrx848x810gz3ahh0hndra22lsvcjdbsw8g35rk";
   }.${system};
 in
   callPackage ./generic.nix rec {
@@ -25,7 +25,7 @@ in
 
     # Please backport all compatible updates to the stable release.
     # This is important for the extension ecosystem.
-    version = "1.53.0";
+    version = "1.56.2";
     pname = "vscode";
 
     executableName = "code" + lib.optionalString isInsiders "-insiders";
@@ -34,7 +34,7 @@ in
 
     src = fetchurl {
       name = "VSCode_${version}_${plat}.${archive_fmt}";
-      url = "https://vscode-update.azurewebsites.net/${version}/${plat}/stable";
+      url = "https://update.code.visualstudio.com/${version}/${plat}/stable";
       inherit sha256;
     };
 
@@ -45,6 +45,7 @@ in
         Open source source code editor developed by Microsoft for Windows,
         Linux and macOS
       '';
+      mainProgram = "code";
       longDescription = ''
         Open source source code editor developed by Microsoft for Windows,
         Linux and macOS. It includes support for debugging, embedded Git

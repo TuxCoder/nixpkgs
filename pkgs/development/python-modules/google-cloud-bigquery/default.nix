@@ -7,7 +7,6 @@
 , google-cloud-storage
 , google-cloud-testutils
 , google-resumable-media
-, grpcio
 , ipython
 , mock
 , pandas
@@ -18,11 +17,11 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-bigquery";
-  version = "2.7.0";
+  version = "2.13.1";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "29721972f5e539e486fbdc722ddf849ad86acd092680d16c271430dc16023544";
+    sha256 = "915f93c61c03d1d6024d5b19355bb96af25da9f924d0b5bab5cde851e1bd48f4";
   };
 
   propagatedBuildInputs = [

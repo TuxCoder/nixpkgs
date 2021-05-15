@@ -2,27 +2,34 @@
 
 buildGoModule rec {
   pname = "trivy";
-  version = "0.15.0";
+  version = "0.18.0";
 
   src = fetchFromGitHub {
     owner = "aquasecurity";
     repo = pname;
     rev = "v${version}";
-    sha256 = "11fd32qb69g23lxrynsnfy8a783sl60rzknvq4shdg41p2ikigdk";
+    sha256 = "sha256-D4oqLyH5JU8AycRZuA0isQmE3UP/0WmBmKW3xvSzk2M=";
   };
 
-  vendorSha256 = "09birwc8x90l2y0znf4fwny3phnmq0cz0l2z3xzwg0j3msrdl2np";
+  vendorSha256 = "sha256-R50alGFyb2ZR7PT1jIsYWMIO45CPet+A5wq+clC1NIY=";
 
-  subPackages = [ "cmd/trivy" ];
+  excludedPackages = "misc";
 
-  buildFlagsArray = [
-    "-ldflags="
-    "-s"
-    "-w"
-    "-X main.version=v${version}"
-  ];
+  preBuild = ''
+    buildFlagsArray+=("-ldflags" "-s -w -X main.version=v${version}")
+  '';
+
+  doInstallCheck = true;
+  installCheckPhase = ''
+    runHook preInstallCheck
+    $out/bin/trivy --help
+    $out/bin/trivy --version | grep "v${version}"
+    runHook postInstallCheck
+  '';
 
   meta = with lib; {
+    homepage = "https://github.com/aquasecurity/trivy";
+    changelog = "https://github.com/aquasecurity/trivy/releases/tag/v${version}";
     description = "A simple and comprehensive vulnerability scanner for containers, suitable for CI";
     longDescription = ''
       Trivy is a simple and comprehensive vulnerability scanner for containers
@@ -31,8 +38,6 @@ buildGoModule rec {
       vulnerabilities of OS packages (Alpine, RHEL, CentOS, etc.) and
       application dependencies (Bundler, Composer, npm, yarn, etc.).
     '';
-    homepage = src.meta.homepage;
-    changelog = "${src.meta.homepage}/releases/tag/v${version}";
     license = licenses.asl20;
     maintainers = with maintainers; [ jk ];
   };

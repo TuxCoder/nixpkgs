@@ -5,6 +5,7 @@ let
   tcpPort = 10005;
   httpPort = 10080;
   tcpStreamPort = 10006;
+  bufferSize = 742;
 in {
   name = "snapcast";
   meta = with pkgs.lib.maintainers; {
@@ -18,6 +19,7 @@ in {
         port = port;
         tcp.port = tcpPort;
         http.port = httpPort;
+        buffer = bufferSize;
         streams = {
           mpd = {
             type = "pipe";
@@ -32,8 +34,15 @@ in {
             type = "tcp";
             location = "127.0.0.1:${toString tcpStreamPort}";
           };
+          meta = {
+            type = "meta";
+            location = "/mpd/bluetooth/tcp";
+          };
         };
       };
+    };
+    client = {
+      environment.systemPackages = [ pkgs.snapcast ];
     };
   };
 
@@ -61,5 +70,12 @@ in {
         server.succeed(
             "curl --fail http://localhost:${toString httpPort}/jsonrpc -d '{json.dumps(get_rpc_version)}'"
         )
+
+    with subtest("test a connection"):
+        client.execute("systemd-run snapclient -h server -p ${toString port}")
+        server.wait_until_succeeds(
+            "journalctl -o cat -u snapserver.service | grep -q 'Hello from'"
+        )
+        client.wait_until_succeeds("journalctl -o cat -u run-\* | grep -q ${toString bufferSize}")
   '';
 })

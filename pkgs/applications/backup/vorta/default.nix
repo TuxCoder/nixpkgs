@@ -2,17 +2,18 @@
 , python3
 , fetchFromGitHub
 , wrapQtAppsHook
+, borgbackup
 }:
 
 python3.pkgs.buildPythonApplication rec {
   pname = "vorta";
-  version = "0.7.2";
+  version = "0.7.5";
 
   src = fetchFromGitHub {
     owner = "borgbase";
     repo = "vorta";
     rev = "v${version}";
-    sha256 = "1amq0fz3xrnxplzd6ih2azx6b4k1w496kcr7f8agfp617f5rkwa5";
+    sha256 = "sha256-qPO8qmXYDDFwV+8hAUyfF4Ins0vkwEJbw4JPguUSYOw=";
   };
 
   postPatch = ''
@@ -30,7 +31,10 @@ python3.pkgs.buildPythonApplication rec {
   doCheck = false;
 
   preFixup = ''
-    makeWrapperArgs+=("''${qtWrapperArgs[@]}")
+    makeWrapperArgs+=(
+      "''${qtWrapperArgs[@]}"
+      --prefix PATH : ${lib.makeBinPath [ borgbackup ]}
+    )
   '';
 
   meta = with lib; {

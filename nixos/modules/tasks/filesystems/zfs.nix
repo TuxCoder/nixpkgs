@@ -103,6 +103,7 @@ in
         readOnly = true;
         type = types.package;
         default = if config.boot.zfs.enableUnstable then pkgs.zfsUnstable else pkgs.zfs;
+        defaultText = "if config.boot.zfs.enableUnstable then pkgs.zfsUnstable else pkgs.zfs";
         description = "Configured ZFS userland tools package.";
       };
 
@@ -302,7 +303,7 @@ in
     };
 
     services.zfs.autoScrub = {
-      enable = mkEnableOption "Enables periodic scrubbing of ZFS pools.";
+      enable = mkEnableOption "periodic scrubbing of ZFS pools";
 
       interval = mkOption {
         default = "Sun, 02:00";
@@ -326,30 +327,36 @@ in
       };
     };
 
-    services.zfs.zed.settings = mkOption {
-      type = with types; attrsOf (oneOf [ str int bool (listOf str) ]);
-      example = literalExample ''
-        {
-          ZED_DEBUG_LOG = "/tmp/zed.debug.log";
+    services.zfs.zed = {
+      enableMail = mkEnableOption "ZED's ability to send emails" // {
+        default = cfgZfs.package.enableMail;
+      };
 
-          ZED_EMAIL_ADDR = [ "root" ];
-          ZED_EMAIL_PROG = "mail";
-          ZED_EMAIL_OPTS = "-s '@SUBJECT@' @ADDRESS@";
+      settings = mkOption {
+        type = with types; attrsOf (oneOf [ str int bool (listOf str) ]);
+        example = literalExample ''
+          {
+            ZED_DEBUG_LOG = "/tmp/zed.debug.log";
 
-          ZED_NOTIFY_INTERVAL_SECS = 3600;
-          ZED_NOTIFY_VERBOSE = false;
+            ZED_EMAIL_ADDR = [ "root" ];
+            ZED_EMAIL_PROG = "mail";
+            ZED_EMAIL_OPTS = "-s '@SUBJECT@' @ADDRESS@";
 
-          ZED_USE_ENCLOSURE_LEDS = true;
-          ZED_SCRUB_AFTER_RESILVER = false;
-        }
-      '';
-      description = ''
-        ZFS Event Daemon /etc/zfs/zed.d/zed.rc content
+            ZED_NOTIFY_INTERVAL_SECS = 3600;
+            ZED_NOTIFY_VERBOSE = false;
 
-        See
-        <citerefentry><refentrytitle>zed</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-        for details on ZED and the scripts in /etc/zfs/zed.d to find the possible variables
-      '';
+            ZED_USE_ENCLOSURE_LEDS = true;
+            ZED_SCRUB_AFTER_RESILVER = false;
+          }
+        '';
+        description = ''
+          ZFS Event Daemon /etc/zfs/zed.d/zed.rc content
+
+          See
+          <citerefentry><refentrytitle>zed</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+          for details on ZED and the scripts in /etc/zfs/zed.d to find the possible variables
+        '';
+      };
     };
   };
 
@@ -358,6 +365,14 @@ in
   config = mkMerge [
     (mkIf cfgZfs.enabled {
       assertions = [
+        {
+          assertion = cfgZED.enableMail -> cfgZfs.package.enableMail;
+          message = ''
+            To allow ZED to send emails, ZFS needs to be configured to enable
+            this. To do so, one must override the `zfs` package and set
+            `enableMail` to true.
+          '';
+        }
         {
           assertion = config.networking.hostId != null;
           message = "ZFS requires networking.hostId to be set";
@@ -432,12 +447,13 @@ in
         '') rootPools));
       };
 
-      boot.loader.grub = mkIf inInitrd {
+      # TODO FIXME See https://github.com/NixOS/nixpkgs/pull/99386#issuecomment-798813567. To not break people's bootloader and as probably not everybody would read release notes that thoroughly add inSystem.
+      boot.loader.grub = mkIf (inInitrd || inSystem) {
         zfsSupport = true;
       };
 
       services.zfs.zed.settings = {
-        ZED_EMAIL_PROG = mkDefault "${pkgs.mailutils}/bin/mail";
+        ZED_EMAIL_PROG = mkIf cfgZED.enableMail (mkDefault "${pkgs.mailutils}/bin/mail");
         PATH = lib.makeBinPath [
           cfgZfs.package
           pkgs.coreutils

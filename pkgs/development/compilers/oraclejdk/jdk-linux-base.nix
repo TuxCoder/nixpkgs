@@ -83,10 +83,8 @@ let result = stdenv.mkDerivation rec {
       sha256 = sha256.${stdenv.hostPlatform.system};
     };
 
-  nativeBuildInputs = [ file ]
+  nativeBuildInputs = [ file makeWrapper ]
     ++ lib.optional installjce unzip;
-
-  buildInputs = [ makeWrapper ];
 
   # See: https://github.com/NixOS/patchelf/issues/10
   dontStrip = 1;
@@ -186,6 +184,7 @@ let result = stdenv.mkDerivation rec {
   meta = with lib; {
     license = licenses.unfree;
     platforms = [ "i686-linux" "x86_64-linux" "armv7l-linux" "aarch64-linux" ]; # some inherit jre.meta.platforms
+    mainProgram = "java";
   };
 
 }; in result

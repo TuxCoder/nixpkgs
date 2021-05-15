@@ -1,25 +1,24 @@
-{ lib, stdenv
+{ lib
+, stdenv
 , buildPythonPackage
 , fetchPypi
 , argh
 , pathtools
 , pyyaml
-, pkgs
-, pytest-cov
 , pytestCheckHook
+, CoreServices
 }:
 
 buildPythonPackage rec {
   pname = "watchdog";
-  version = "1.0.2";
+  version = "2.1.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-N2y8KjXAOSsP5/8W+8GzA/2Z1N2ZEatVge6daa3IiYI=";
+    sha256 = "sha256-VTFu+rUvZZuLe1lzBoC/snrAA1IvJMRPa81gxONzbM0=";
   };
 
-  buildInputs = lib.optionals stdenv.isDarwin
-    [ pkgs.darwin.apple_sdk.frameworks.CoreServices ];
+  buildInputs = lib.optionals stdenv.isDarwin [ CoreServices ];
 
   propagatedBuildInputs = [
     argh
@@ -28,9 +27,14 @@ buildPythonPackage rec {
   ];
 
   checkInputs = [
-    pytest-cov
     pytestCheckHook
   ];
+
+  postPatch = ''
+    substituteInPlace setup.cfg \
+      --replace "--cov=watchdog" "" \
+      --replace "--cov-report=term-missing" ""
+  '';
 
   pythonImportsCheck = [ "watchdog" ];
 
@@ -39,6 +43,7 @@ buildPythonPackage rec {
     homepage = "https://github.com/gorakhargosh/watchdog";
     license = licenses.asl20;
     maintainers = with maintainers; [ goibhniu ];
+    # error: use of undeclared identifier 'kFSEventStreamEventFlagItemCloned'
+    broken = stdenv.isDarwin;
   };
-
 }

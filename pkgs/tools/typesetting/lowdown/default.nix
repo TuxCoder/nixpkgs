@@ -2,23 +2,25 @@
 
 stdenv.mkDerivation rec {
   pname = "lowdown";
-  version = "0.8.0";
+  version = "0.8.4";
 
   outputs = [ "out" "lib" "dev" "man" ];
 
   src = fetchurl {
     url = "https://kristaps.bsd.lv/lowdown/snapshots/lowdown-${version}.tar.gz";
-    sha512 = "17w0hldlg7x0f4946bz1pmgkpp08dha3myz8pk0rx8n2lqlw76f3n9giq69kw82sgzg7qqy31sl9mxvgaxyf6hcdgmxnkr7h8d9xmak";
+    sha512 = "1rbsngfw36lyc8s6qxl8hgb1pzj0gdzlb7yqkfblb8fpgs2z0ggyhnfszrqfir8s569i7a9yk9bdx2ggwqhjj56hmi2i4inlnb3rmni";
   };
 
   nativeBuildInputs = [ which ]
     ++ lib.optionals stdenv.isDarwin [ fixDarwinDylibNames ];
 
   configurePhase = ''
+    runHook preConfigure
     ./configure PREFIX=''${!outputDev} \
                 BINDIR=''${!outputBin}/bin \
                 LIBDIR=''${!outputLib}/lib \
                 MANDIR=''${!outputMan}/share/man
+    runHook postConfigure
   '';
 
   # Fix lib extension so that fixDarwinDylibNames detects it
@@ -27,6 +29,9 @@ stdenv.mkDerivation rec {
   '';
 
   patches = lib.optional (!stdenv.hostPlatform.isStatic) ./shared.patch;
+
+  doCheck = stdenv.hostPlatform == stdenv.buildPlatform;
+  checkTarget = "regress";
 
   meta = with lib; {
     homepage = "https://kristaps.bsd.lv/lowdown/";

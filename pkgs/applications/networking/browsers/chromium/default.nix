@@ -1,20 +1,18 @@
 { newScope, config, stdenv, fetchurl, makeWrapper
-, llvmPackages_11, ed, gnugrep, coreutils, xdg-utils
-, glib, gtk3, gnome3, gsettings-desktop-schemas, gn, fetchgit
+, llvmPackages_11, llvmPackages_12, ed, gnugrep, coreutils, xdg-utils
+, glib, gtk3, gnome, gsettings-desktop-schemas, gn, fetchgit
 , libva ? null
-, pipewire_0_2
+, pipewire
 , gcc, nspr, nss, runCommand
 , lib
 
 # package customization
 # Note: enable* flags should not require full rebuilds (i.e. only affect the wrapper)
 , channel ? "stable"
-, gnomeSupport ? false, gnome ? null
+, gnomeSupport ? false, gnome2 ? null
 , gnomeKeyringSupport ? false
 , proprietaryCodecs ? true
-, enablePepperFlash ? false
 , enableWideVine ? false
-, enableVaapi ? false # Disabled by default due to unofficial support
 , ungoogled ? false # Whether to build chromium or ungoogled-chromium
 , cupsSupport ? true
 , pulseSupport ? config.pulseaudio or stdenv.isLinux
@@ -33,7 +31,7 @@ let
     upstream-info = (lib.importJSON ./upstream-info.json).${channel};
 
     mkChromiumDerivation = callPackage ./common.nix ({
-      inherit channel gnome gnomeSupport gnomeKeyringSupport proprietaryCodecs
+      inherit channel gnome2 gnomeSupport gnomeKeyringSupport proprietaryCodecs
               cupsSupport pulseSupport ungoogled;
       gnChromium = gn.overrideAttrs (oldAttrs: {
         inherit (upstream-info.deps.gn) version;
@@ -41,13 +39,12 @@ let
           inherit (upstream-info.deps.gn) url rev sha256;
         };
       });
+    } // lib.optionalAttrs (lib.versionAtLeast upstream-info.version "90") {
+      llvmPackages = llvmPackages_12;
+      stdenv = llvmPackages_12.stdenv;
     });
 
     browser = callPackage ./browser.nix { inherit channel enableWideVine ungoogled; };
-
-    plugins = callPackage ./plugins.nix {
-      inherit enablePepperFlash;
-    };
 
     ungoogled-chromium = callPackage ./ungoogled.nix {};
   };
@@ -159,23 +156,20 @@ in stdenv.mkDerivation {
     gsettings-desktop-schemas glib gtk3
 
     # needed for XDG_ICON_DIRS
-    gnome3.adwaita-icon-theme
+    gnome.adwaita-icon-theme
   ];
 
   outputs = ["out" "sandbox"];
 
   buildCommand = let
     browserBinary = "${chromiumWV}/libexec/chromium/chromium";
-    getWrapperFlags = plugin: "$(< \"${plugin}/nix-support/wrapper-flags\")";
-    libPath = lib.makeLibraryPath [ libva pipewire_0_2 ];
+    libPath = lib.makeLibraryPath [ libva pipewire ];
 
   in with lib; ''
     mkdir -p "$out/bin"
 
     eval makeWrapper "${browserBinary}" "$out/bin/chromium" \
-      --add-flags ${escapeShellArg (escapeShellArg commandLineArgs)} \
-      ${lib.optionalString enableVaapi "--add-flags --enable-accelerated-video-decode"} \
-      ${concatMapStringsSep " " getWrapperFlags chromium.plugins.enabled}
+      --add-flags ${escapeShellArg (escapeShellArg commandLineArgs)}
 
     ed -v -s "$out/bin/chromium" << EOF
     2i

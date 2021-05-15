@@ -71,7 +71,7 @@ in
       #utmp = 29; # unused
       # ddclient = 30; # converted to DynamicUser = true
       davfs2 = 31;
-      #disnix = 33; # module removed
+      disnix = 33;
       osgi = 34;
       tor = 35;
       cups = 36;
@@ -315,7 +315,7 @@ in
       restya-board = 284;
       mighttpd2 = 285;
       hass = 286;
-      monero = 287;
+      #monero = 287; # dynamically allocated as of 2021-05-08
       ceph = 288;
       duplicati = 289;
       monetdb = 290;
@@ -389,7 +389,7 @@ in
       utmp = 29;
       # ddclient = 30; # converted to DynamicUser = true
       davfs2 = 31;
-      #disnix = 33; # module removed
+      disnix = 33;
       osgi = 34;
       tor = 35;
       #cups = 36; # unused
@@ -619,7 +619,7 @@ in
       restya-board = 284;
       mighttpd2 = 285;
       hass = 286;
-      monero = 287;
+      # monero = 287; # dynamically allocated as of 2021-05-08
       ceph = 288;
       duplicati = 289;
       monetdb = 290;

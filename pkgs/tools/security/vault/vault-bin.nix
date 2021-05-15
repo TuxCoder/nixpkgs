@@ -1,26 +1,26 @@
 { lib, stdenv, fetchurl, unzip }:
 
 let
-  version = "1.6.2";
+  version = "1.7.1";
 
   sources = let
     base = "https://releases.hashicorp.com/vault/${version}";
   in {
     x86_64-linux = fetchurl {
       url = "${base}/vault_${version}_linux_amd64.zip";
-      sha256 = "1vcxnky8qnn2ib33r9604cbjrgm939ddrhwqcjylbv217cmc9alf";
+      sha256 = "021qa8jcqwy27q83lvamvv5zqnkwk5y0jsb8al5yxpgzxqnmsyb1";
     };
     i686-linux = fetchurl {
       url = "${base}/vault_${version}_linux_386.zip";
-      sha256 = "0mcav36dcmvky8v4y65jvh837i72aqz7arv2ivjpajym3gf7qrq1";
+      sha256 = "02hhxpa8craa91nfgvwziswisfdnqw4gbwrxyxr753v1y00y1sz8";
     };
     x86_64-darwin = fetchurl {
       url = "${base}/vault_${version}_darwin_amd64.zip";
-      sha256 = "1is7s445jc4ll2lyfxgjwwl89fly1l8kskqp2p8z179d8hhgd0ms";
+      sha256 = "141zzfwrjdjv8ymrdc4mxs2f4cphdir4xjaa40s571ri38in33zh";
     };
     aarch64-linux = fetchurl {
       url = "${base}/vault_${version}_linux_arm64.zip";
-      sha256 = "0i5d87a393464r68rjv83bjhg51yaysccqbwaaydmzk1m45icg7x";
+      sha256 = "1plrmmy86zb2ij49dk2mwn364i2n83ch4gjz5pln2d4wjx21gpaq";
     };
   };
 
@@ -35,9 +35,13 @@ in stdenv.mkDerivation {
   sourceRoot = ".";
 
   installPhase = ''
+    runHook preInstall
+
     mkdir -p $out/bin $out/share/bash-completion/completions
     mv vault $out/bin
     echo "complete -C $out/bin/vault vault" > $out/share/bash-completion/completions/vault
+
+    runHook postInstall
   '';
 
   meta = with lib; {
