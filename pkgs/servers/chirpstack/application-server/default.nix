@@ -4,8 +4,8 @@ stdenv.mkDerivation rec {
   version = "3.14.0";
   src = builtins.fetchurl {
     name = "${pname}-src";
-    url = "https://artifacts.chirpstack.io/downloads/chirpstack-application-server/chirpstack-network-server_${version}_linux_amd64.tar.gz";
-    sha256 = "sha256:02n3n1ksb63agi79z1mxl5v24s4dk3k6cizf5pzz3486dgbs0lpm";
+    url = "https://artifacts.chirpstack.io/downloads/chirpstack-application-server/chirpstack-application-server_${version}_linux_amd64.tar.gz";
+    sha256 = "sha256:05xpf6nzf534k78ycq9prq8ryi9a0wvijl1pjn9llw2c2hfw77c9";
   };
 
   unpackPhase = ''

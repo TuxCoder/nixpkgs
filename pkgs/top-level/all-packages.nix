@@ -17637,6 +17637,7 @@ in
 
   chirpstack = {
     network-server = callPackage ../servers/chirpstack/network-server {};
+    application-server = callPackage ../servers/chirpstack/application-server {};
   };
 
   clickhouse = callPackage ../servers/clickhouse {

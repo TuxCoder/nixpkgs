@@ -3,24 +3,24 @@
 with lib;
 
 let
-  cfg = config.services.chirpstack-network;
-  defaultUser = "chirpstack-network";
+  cfg = config.services.chirpstack-application;
+  defaultUser = "chirpstack-application";
 
   format = pkgs.formats.toml {};
 
-  configFile = format.generate "chirpstack-network-config.toml" (with cfg;  {
+  configFile = format.generate "chirpstack-application-config.toml" (with cfg;  {
     general = {
       log_to_syslog = true;
     };
     postgresql = {
-      dns="postgresql://${postgresql.host}/${postgresql.database}";
+      dsn="postgres://${postgresql.host}/${postgresql.database}?sslmode=disable";
     };
-    inherit redis network_server monitoring;
+    inherit redis application_server monitoring;
   });
 in {
   ###### interface
   options = {
-    services.chirpstack-network = {
+    services.chirpstack-application = {
 
       enable = mkEnableOption ''
         Enables Chirpstack Network Server, on http://localhost:TODO
@@ -44,7 +44,7 @@ in {
       };
       redis = {
 
-        server = mkOption {
+        servers = mkOption {
           type = types.listOf types.str;
           default = [ "localhost:6379" ];
           description = ''
@@ -60,10 +60,10 @@ in {
         };
       };
 
-      network_server = {
-        net_id = mkOption {
+      application_server = {
+        id = mkOption {
           type = types.str;
-          default = "000000";
+          default = "cce20631-640f-43f5-971d-54ca0eab690b";
           description = ''
             net id
             '';
@@ -77,22 +77,32 @@ in {
               '';
           };
         };
-        api = {
-          bind = mkOption {
-            type = types.str;
-            default = "[::1]:8000";
-            description = ''
-              bind address
-              '';
+        external_api = {
+          bind = {
+            bind = mkOption {
+              type = types.str;
+              default = "[::]:8080";
+              description = ''
+                bind address
+                '';
+            };
+          };
+          jwt_secret = {
+            bind = mkOption {
+              type = types.str;
+              description = ''
+                jwt_secret
+                '';
+            };
           };
         };
-        gateway = {
-          backend = {
+        integration = {
+          enabled = {
             type = mkOption {
-              type = types.str;
-              default = "mqtt";
+              type = types.listOf types.str;
+              default = [ "mqtt" ];
               description = ''
-                backend type, one of "mqtt", "amqp", "gcp_pub_sub", "azure_iot_hub"
+                backend type, a list of "mqtt", "amqp", "aws_sns", "azure_service_bus", "gcp_pub_sub", "kafka", "postgresql"
                 '';
             };
             mqtt = {
@@ -147,7 +157,7 @@ in {
 #         type = types.nullOr types.str;
 #         default = null;
 #         description = ''
-#           Path to users cert.pem file, will be copied into the chirpstack-network's
+#           Path to users cert.pem file, will be copied into the chirpstack-application's
 #           <literal>configDir</literal>
 #         '';
 #       };
@@ -156,7 +166,7 @@ in {
 #         type = types.nullOr types.str;
 #         default = null;
 #         description = ''
-#           Path to users key.pem file, will be copied into the chirpstack-network's
+#           Path to users key.pem file, will be copied into the chirpstack-application's
 #           <literal>configDir</literal>
 #         '';
 #       };
@@ -175,7 +185,7 @@ in {
 #       devices = mkOption {
 #         default = {};
 #         description = ''
-#           Peers/devices which chirpstack-network should communicate with.
+#           Peers/devices which chirpstack-application should communicate with.
 #         '';
 #         example = {
 #           bigbox = {
@@ -207,7 +217,7 @@ in {
 #               type = types.str;
 #               description = ''
 #                 The id of the other peer, this is mandatory. It's documented at
-#                 https://docs.chirpstack-network.net/dev/device-ids.html
+#                 https://docs.chirpstack-application.net/dev/device-ids.html
 #               '';
 #             };
 
@@ -238,7 +248,7 @@ in {
 #       folders = mkOption {
 #         default = {};
 #         description = ''
-#           folders which should be shared by chirpstack-network.
+#           folders which should be shared by chirpstack-application.
 #         '';
 #         example = literalExample ''
 #           {
@@ -297,9 +307,9 @@ in {
 #             versioning = mkOption {
 #               default = null;
 #               description = ''
-#                 How to keep changed/deleted files with chirpstack-network.
+#                 How to keep changed/deleted files with chirpstack-application.
 #                 There are 4 different types of versioning with different parameters.
-#                 See https://docs.chirpstack-network.net/users/versioning.html
+#                 See https://docs.chirpstack-application.net/users/versioning.html
 #               '';
 #               example = [
 #                 {
@@ -320,7 +330,7 @@ in {
 #                     params = {
 #                       cleanInterval = "3600";
 #                       maxAge = "31536000";
-#                       versionsPath = "/chirpstack-network/backup";
+#                       versionsPath = "/chirpstack-application/backup";
 #                     };
 #                   };
 #                 }
@@ -341,14 +351,14 @@ in {
 #                     type = enum [ "external" "simple" "staggered" "trashcan" ];
 #                     description = ''
 #                       Type of versioning.
-#                       See https://docs.chirpstack-network.net/users/versioning.html
+#                       See https://docs.chirpstack-application.net/users/versioning.html
 #                     '';
 #                   };
 #                   params = mkOption {
 #                     type = attrsOf (either str path);
 #                     description = ''
 #                       Parameters for versioning. Structure depends on versioning.type.
-#                       See https://docs.chirpstack-network.net/users/versioning.html
+#                       See https://docs.chirpstack-application.net/users/versioning.html
 #                     '';
 #                   };
 #                 };
@@ -401,7 +411,7 @@ in {
 #               default = false;
 #               description = ''
 #                 Whether to delete files in destination. See <link
-#                 xlink:href="https://docs.chirpstack-network.net/advanced/folder-ignoredelete.html">
+#                 xlink:href="https://docs.chirpstack-application.net/advanced/folder-ignoredelete.html">
 #                 upstream's docs</link>.
 #               '';
 #             };
@@ -448,7 +458,7 @@ in {
 #       default = null;
 #       example = "socks5://address.com:1234";
 #       description = ''
-#         Overwrites all_proxy environment variable for the chirpstack-network process to
+#         Overwrites all_proxy environment variable for the chirpstack-application process to
 #         the given value. This is normaly used to let relay client connect
 #         through SOCKS5 proxy server.
 #       '';
@@ -456,7 +466,7 @@ in {
 
       dataDir = mkOption {
         type = types.path;
-        default = "/var/lib/chirpstack-network";
+        default = "/var/lib/chirpstack-application";
         description = ''
           Path where config and persistant data is saved.
         '';
@@ -471,7 +481,7 @@ in {
 #         let
 #           nixos = config.system.stateVersion;
 #           cond  = versionAtLeast nixos "19.03";
-#         in cfg.dataDir + (optionalString cond "/.config/chirpstack-network");
+#         in cfg.dataDir + (optionalString cond "/.config/chirpstack-application");
 #     };
 
       openDefaultPorts = mkOption {
@@ -482,14 +492,14 @@ in {
           Open the default ports in the firewall:
             - TCP 22000 for transfers
             - UDP 21027 for discovery
-          If multiple users are running chirpstack-network on this machine, you will need to manually open a set of ports for each instance and leave this disabled.
+          If multiple users are running chirpstack-application on this machine, you will need to manually open a set of ports for each instance and leave this disabled.
           Alternatively, if are running only a single instance on this machine using the default ports, enable this.
         '';
       };
 
       package = mkOption {
         type = types.package;
-        default = pkgs.chirpstack.network-server;
+        default = pkgs.chirpstack.application-server;
         defaultText = "pkgs.chirpstack.network-server";
         example = literalExample "pkgs.chirpstack.network-server";
         description = ''
@@ -516,18 +526,18 @@ in {
         { group = cfg.group;
           home  = cfg.dataDir;
           createHome = true;
-          uid = config.ids.uids.chirpstack-network;
+          uid = config.ids.uids.chirpstack-application;
           description = "Chirpstack Network daemon user";
         };
     };
 
     users.groups = mkIf (cfg.systemService && cfg.group == defaultUser) {
       ${defaultUser}.gid =
-        config.ids.gids.chirpstack-network;
+        config.ids.gids.chirpstack-application;
     };
 
     systemd.services = {
-      chirpstack-network = mkIf cfg.systemService {
+      chirpstack-application = mkIf cfg.systemService {
         description = "Chirpstack Network service";
         after = [ "network.target" ];
         wantedBy = [ "multi-user.target" ];
@@ -536,7 +546,7 @@ in {
           User = cfg.user;
           Group = cfg.group;
           ExecStart = ''
-            ${cfg.package}/bin/chirpstack-network-server --config ${configFile.outPath}
+            ${cfg.package}/bin/chirpstack-application-server --config ${configFile.outPath}
           '';
         };
       };
