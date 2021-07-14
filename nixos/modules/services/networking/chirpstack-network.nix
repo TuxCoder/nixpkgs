@@ -13,7 +13,7 @@ let
       log_to_syslog = true;
     };
     postgresql = {
-      dns="postgresql://${postgresql.host}/${postgresql.database}";
+      dsn="postgresql://${postgresql.username}@${postgresql.host}/${postgresql.database}?sslmode=disable";
     };
     inherit redis network_server monitoring;
   });
@@ -32,6 +32,13 @@ in {
           default = "localhost";
           description = ''
             Postgresql hostname eg "localhost"
+            '';
+        };
+        username = mkOption {
+          type = types.str;
+          default = "postgresql";
+          description = ''
+            Postgresql username
             '';
         };
         database = mkOption {
@@ -84,6 +91,41 @@ in {
             description = ''
               bind address
               '';
+          };
+        };
+        network_settings = {
+          extra_channels = mkOption {
+            type = types.listOf  ( types.submodule {
+              options = {
+                frequency= mkOption {
+                  type = types.int;
+                  description = ''
+                  '';
+                };
+                min_dr = mkOption {
+                  type = types.int;
+                  default= 0;
+                  description = ''
+                  '';
+                };
+                max_dr = mkOption {
+                  type = types.int;
+                  default = 5;
+                  description = ''
+                  '';
+                };
+              };
+            });
+            description = ''
+              Extra channel configuration.
+
+              Use this for LoRaWAN regions where it is possible to extend the by default
+              available channels with additional channels (e.g. the EU band).
+              The first 5 channels will be configured as part of the OTAA join-response
+              (using the CFList field).
+              The other channels (or channel / data-rate changes) will be (re)configured
+              using the NewChannelReq mac-command.
+            '';
           };
         };
         gateway = {

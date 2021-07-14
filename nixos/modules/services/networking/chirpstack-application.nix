@@ -13,7 +13,7 @@ let
       log_to_syslog = true;
     };
     postgresql = {
-      dsn="postgres://${postgresql.host}/${postgresql.database}?sslmode=disable";
+      dsn="postgres://${postgresql.username}@${postgresql.host}/${postgresql.database}?sslmode=disable";
     };
     inherit redis application_server monitoring;
   });
@@ -34,19 +34,25 @@ in {
             Postgresql hostname eg "localhost"
             '';
         };
+        username = mkOption {
+          type = types.str;
+          default = "postgresql";
+          description = ''
+            Postgresql username
+            '';
+        };
         database = mkOption {
           type = types.str;
-          default = "chirpstack_ns";
+          default = "chirpstack_app";
           description = ''
             Postgresql database name.
             '';
         };
       };
       redis = {
-
         servers = mkOption {
           type = types.listOf types.str;
-          default = [ "localhost:6379" ];
+          default = [ "localhost" ];
           description = ''
             Redis server list
             '';
@@ -78,57 +84,51 @@ in {
           };
         };
         external_api = {
-          bind = {
-            bind = mkOption {
-              type = types.str;
-              default = "[::]:8080";
-              description = ''
-                bind address
-                '';
-            };
+          bind =  mkOption {
+            type = types.str;
+            default = "0.0.0.0:8080";
+            description = ''
+              bind address
+              '';
           };
-          jwt_secret = {
-            bind = mkOption {
-              type = types.str;
-              description = ''
-                jwt_secret
-                '';
-            };
+          jwt_secret  = mkOption {
+            type = types.str;
+            description = ''
+              jwt_secret
+              '';
           };
         };
         integration = {
-          enabled = {
-            type = mkOption {
-              type = types.listOf types.str;
-              default = [ "mqtt" ];
+          type = mkOption {
+            type = types.listOf types.str;
+            default = [ "mqtt" ];
+            description = ''
+              backend type, a list of "mqtt", "amqp", "aws_sns", "azure_service_bus", "gcp_pub_sub", "kafka", "postgresql"
+              '';
+          };
+          mqtt = {
+            server = mkOption {
+              type = types.str;
+              default = "tcp://localhost:1883";
               description = ''
-                backend type, a list of "mqtt", "amqp", "aws_sns", "azure_service_bus", "gcp_pub_sub", "kafka", "postgresql"
+                mqtt server
                 '';
             };
-            mqtt = {
-              server = mkOption {
-                type = types.str;
-                default = "tcp://localhost:1883";
-                description = ''
-                  mqtt server
-                  '';
-              };
-              username = mkOption {
-                type = types.str;
-                default = "";
-                description = ''
-                  mqtt username
-                  '';
-              };
-              password = mkOption {
-                type = types.str;
-                default = "";
-                description = ''
-                  mqtt password
-                  '';
-              };
-
+            username = mkOption {
+              type = types.str;
+              default = "";
+              description = ''
+                mqtt username
+                '';
             };
+            password = mkOption {
+              type = types.str;
+              default = "";
+              description = ''
+                mqtt password
+                '';
+            };
+
           };
         };
       };
